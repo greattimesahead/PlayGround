@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#120d09" />
+    <title>TOMB RUNNER — The Sunken Path</title>
+    <meta name="description" content="A low-poly jungle runner. Jump, slide and shoot through the Sunken Path." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='10' fill='%23150f0b'/><path d='M12 44h40L42 14H22z' fill='%23c89855'/><path d='M22 28h20v6H22z' fill='%23392317'/></svg>" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="game-shell">
+      <canvas id="game" aria-label="Tomb Runner game canvas"></canvas>
+      <div class="screen-grain" aria-hidden="true"></div>
+      <div class="screen-vignette" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+
+      <div id="hud" class="hud is-hidden" aria-live="polite">
+        <div class="hud-top">
+          <div class="location-panel">
+            <span class="eyebrow"><i></i> EXPEDITION 01</span>
+            <strong>THE SUNKEN PATH</strong>
+            <span class="sub">TEMPLE OF THE JADE SERPENT</span>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-meta">
+              <span>RUN</span>
+              <span id="distanceLabel">0000 m</span>
+              <span>GATE</span>
+            </div>
+            <div class="progress-track"><div id="progressFill"></div><div id="progressMarker"></div></div>
+            <div id="objectiveLabel" class="objective-label">REACH THE SUN GATE</div>
+          </div>
+
+          <div class="score-panel">
+            <span>RELIC SCORE</span>
+            <strong id="scoreLabel">000000</strong>
+            <div id="comboLabel" class="combo">CHAIN ×1</div>
+          </div>
+        </div>
+
+        <div class="reticle" id="reticle" aria-hidden="true">
+          <b class="rt tl"></b><b class="rt tr"></b><b class="rt bl"></b><b class="rt br"></b>
+          <i></i><span id="targetLabel"></span>
+        </div>
+
+        <div class="tutorial" id="tutorial">
+          <div class="tutorial-key" id="tutorialKey">SPACE</div>
+          <div><strong id="tutorialTitle">FIRE</strong><span id="tutorialText">Shoot crates and whatever moves.</span></div>
+        </div>
+
+        <div class="toast-stack" id="toastStack"></div>
+
+        <div class="hud-bottom">
+          <div class="vitals-panel">
+            <div class="portrait">
+              <div class="portrait-head"></div>
+              <div class="portrait-body"></div>
+              <span class="portrait-status">SURVIVOR</span>
+            </div>
+            <div class="vitals-main">
+              <div class="vitals-row"><span>VITALS</span><b id="healthLabel">100</b></div>
+              <div class="health-track"><div class="health-damage" id="healthDamage"></div><div class="health-fill" id="healthFill"></div><div class="health-shine"></div></div>
+              <div class="vitals-sub"><span id="bestLabel">PISTOL</span><span id="furyLabel" class="fury-tag is-off">FURY READY</span></div>
+            </div>
+          </div>
+
+          <div class="weapon-panel">
+            <div class="weapon-readout">
+              <div>
+                <span id="weaponName">PISTOL</span>
+                <small id="weaponHint">SIDEARM · ∞</small>
+              </div>
+              <strong id="ammoLabel">∞</strong>
+            </div>
+            <div class="weapon-slots" id="weaponSlots">
+              <div class="weapon-slot is-active" data-weapon="pistol"><span>1</span><svg viewBox="0 0 48 24"><path d="M4 7h26v5H18l-3 8H9l3-8H4zM30 7h9v5h-9z"/><path d="M7 12h8v3H7z"/></svg><em>PISTOL</em><b>∞</b></div>
+              <div class="weapon-slot is-locked" data-weapon="ak"><span>2</span><svg viewBox="0 0 48 24"><path d="M2 8h25l2-3h10v5h7v4H30l-2 7h-5l1-7H11l-3 4H3l3-7H2z"/><path d="M13 16h7v5h-7z"/></svg><em>AK-47</em><b>0</b></div>
+              <div class="weapon-slot is-locked" data-weapon="rocket"><span>3</span><svg viewBox="0 0 48 24"><path d="M2 10h24l7-6h8v16h-6l-9-6H2z"/><path d="M39 7h6v10h-6zM18 16l3 7h5l-2-7z"/></svg><em>ROCKET</em><b>0</b></div>
+              <div class="weapon-slot is-locked" data-weapon="grenade"><span>4</span><svg viewBox="0 0 48 24"><path d="M16 9a8 8 0 1 1 0 13 8 8 0 0 1 0-13zM23 6l4-4 2 3 4-1 1 4-3 2 1 4-4 1-2-4-4 1z"/></svg><em>GRENADE</em><b>0</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-strip">
+          <span><kbd>A</kbd><kbd>D</kbd> STRAFE</span>
+          <span><kbd>W</kbd> JUMP</span>
+          <span><kbd>CTRL</kbd> SLIDE</span>
+          <span><kbd>SPACE</kbd> FIRE</span>
+          <span class="mute-hint"><kbd>M</kbd> SOUND</span>
+        </div>
+
+        <div class="damage-flash" id="damageFlash"></div>
+      </div>
+
+      <section id="titleScreen" class="screen title-screen">
+        <div class="title-copy">
+          <div class="kicker"><span></span> LARA CROFT'S LOST TEMPLE PRESENTS <span></span></div>
+          <h1>TOMB<span>RUNNER</span></h1>
+          <div class="title-rule"><i></i><b>THE SUNKEN PATH</b><i></i></div>
+          <p>One ancient road. A temple full of teeth.<br />Run it. Shoot it. Take everything that isn't nailed down.</p>
+          <button id="startButton" class="stone-button"><span>BEGIN THE RUN</span><em>PRESS ENTER</em></button>
+          <div class="title-controls">
+            <span><kbd>W</kbd> JUMP</span><span><kbd>CTRL</kbd> SLIDE</span><span><kbd>A</kbd><kbd>D</kbd> STRAFE</span><span><kbd>SPACE</kbd> SHOOT</span>
+          </div>
+          <div class="small-note">NO MOUSE REQUIRED <span>·</span> FULL KEYBOARD</div>
+        </div>
+        <div class="title-badge">
+          <span>PS-ONE</span>
+          <b>1996</b>
+          <em>32-BIT ADVENTURE</em>
+        </div>
+        <div class="title-footer"><span>EXPEDITION 01</span><span>SOUND ON</span><span>BUILD 1.0</span></div>
+      </section>
+
+      <section id="pauseScreen" class="screen pause-screen is-hidden">
+        <div class="dialog">
+          <span class="eyebrow">EXPEDITION PAUSED</span>
+          <h2>CATCH YOUR BREATH</h2>
+          <p>The temple can wait. It has waited a thousand years.</p>
+          <button id="resumeButton" class="stone-button"><span>RESUME</span><em>PRESS P</em></button>
+          <div class="dialog-links"><button id="restartButton">RESTART RUN</button><button id="quitButton">RETURN TO TITLE</button></div>
+        </div>
+      </section>
+
+      <section id="endScreen" class="screen end-screen is-hidden">
+        <div class="dialog end-dialog">
+          <span class="eyebrow" id="endEyebrow">RUN COMPLETE</span>
+          <h2 id="endTitle">THE SUN GATE OPENS</h2>
+          <p id="endCopy">You made it out with the relics. The temple will remember your name.</p>
+          <div class="end-stats">
+            <div><span>RELIC SCORE</span><strong id="endScore">0</strong></div>
+            <div><span>CRATES</span><strong id="endCrates">0</strong></div>
+            <div><span>KILLS</span><strong id="endKills">0</strong></div>
+            <div><span>ACCURACY</span><strong id="endAccuracy">0%</strong></div>
+          </div>
+          <button id="againButton" class="stone-button"><span>RUN IT AGAIN</span><em>PRESS ENTER</em></button>
+        </div>
+      </section>
+
+      <div id="loading" class="loading">
+        <div class="loading-mark"></div>
+        <span>CARVING THE TEMPLE</span>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
